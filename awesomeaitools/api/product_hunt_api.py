@@ -1,18 +1,8 @@
-"""Product Hunt API Client with Fallback Data"""
+"""Product Hunt Static Data (API functionality removed)"""
 
-import httpx
-from typing import Optional, List, Dict, Any
-from datetime import datetime
+from typing import Optional, List, Dict
 
-# Product Hunt API Configuration
-PH_API_URL = "https://api.producthunt.com/v2/api/graphql"
-PH_OAUTH_URL = "https://api.producthunt.com/v2/oauth/token"
-
-# Your API credentials
-PH_API_KEY = "HgDFis_Oq_fqPi-2b-tOp-xCnThpMW3Y-9cgkct1rdc"
-PH_API_SECRET = "vphjJEKQ33N4R7Wyaus_ngMGjZfm0ajwlSpZi6hfxI"
-
-# Fallback categories (from Product Hunt /categories page)
+# Categories
 FALLBACK_CATEGORIES = [
     {
         "id": "ai",
@@ -160,7 +150,7 @@ FALLBACK_CATEGORIES = [
     },
 ]
 
-# Fallback products (top products from Product Hunt)
+# Products
 FALLBACK_PRODUCTS = [
     # AI Category
     {
@@ -563,120 +553,14 @@ FALLBACK_PRODUCTS = [
 ]
 
 
-class ProductHuntAPI:
-    """Product Hunt API Client with fallback data."""
-
-    def __init__(self):
-        self.url = PH_API_URL
-        self.access_token = None
-        self.api_available = False
-        self._try_authenticate()
-
-    def _try_authenticate(self):
-        """Try to get access token using client credentials."""
-        try:
-            with httpx.Client(timeout=10.0) as client:
-                response = client.post(
-                    PH_OAUTH_URL,
-                    data={
-                        "client_id": PH_API_KEY,
-                        "client_secret": PH_API_SECRET,
-                        "grant_type": "client_credentials",
-                    },
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    self.access_token = data.get("access_token")
-                    self.api_available = True
-                    print("✓ Product Hunt API connected!")
-                else:
-                    print(f"API auth failed, using fallback data")
-                    self.api_available = False
-        except Exception as e:
-            print(f"API unavailable, using fallback data")
-            self.api_available = False
-
-    def _get_headers(self):
-        return {
-            "Authorization": f"Bearer {self.access_token}",
-            "Content-Type": "application/json",
-        }
-
-    def _execute_query(
-        self, query: str, variables: Optional[Dict] = None
-    ) -> Dict[str, Any]:
-        """Execute a GraphQL query."""
-        if not self.api_available:
-            return {"data": None}
-
-        payload = {"query": query}
-        if variables:
-            payload["variables"] = variables
-
-        try:
-            with httpx.Client(timeout=15.0) as client:
-                response = client.post(
-                    self.url, headers=self._get_headers(), json=payload
-                )
-                response.raise_for_status()
-                return response.json()
-        except Exception as e:
-            print(f"API query failed: {e}")
-            return {"data": None}
-
-    def get_topics(self) -> List[Dict]:
-        """Get topics/categories."""
-        if self.api_available:
-            query = """
-            query {
-                topics(first: 20) {
-                    edges { node { id name slug description postsCount } }
-                }
-            }
-            """
-            result = self._execute_query(query)
-            if result.get("data") and result["data"].get("topics"):
-                return [edge["node"] for edge in result["data"]["topics"]["edges"]]
-
-        # Use fallback data
-        return FALLBACK_CATEGORIES
-
-    def get_posts(self, first: int = 20, topic: Optional[str] = None) -> List[Dict]:
-        """Get posts/products."""
-        if self.api_available:
-            query = """
-            query GetPosts($first: Int!) {
-                posts(first: $first, order: VOTES) {
-                    edges { 
-                        node { 
-                            id name tagline description url votesCount commentsCount 
-                            website thumbnail { url }
-                            topics { edges { node { name slug } } }
-                        } 
-                    }
-                }
-            }
-            """
-            result = self._execute_query(query, {"first": first})
-            if result.get("data") and result["data"].get("posts"):
-                return [edge["node"] for edge in result["data"]["posts"]["edges"]]
-
-        # Use fallback data, optionally filtered by topic
-        products = FALLBACK_PRODUCTS
-        if topic and topic != "all":
-            products = [p for p in products if p.get("category") == topic]
-        return products[:first]
-
-
-# Singleton instance
-ph_api = ProductHuntAPI()
-
-
 def get_categories() -> List[Dict]:
-    """Get categories from API or fallback."""
-    return ph_api.get_topics()
+    """Get categories (static data only)."""
+    return FALLBACK_CATEGORIES
 
 
 def get_products(category: Optional[str] = None, limit: int = 20) -> List[Dict]:
-    """Get products from API or fallback."""
-    return ph_api.get_posts(first=limit, topic=category)
+    """Get products (static data only)."""
+    products = FALLBACK_PRODUCTS
+    if category and category != "all":
+        products = [p for p in products if p.get("category") == category]
+    return products[:limit]

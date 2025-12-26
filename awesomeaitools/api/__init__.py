@@ -1,7 +1,6 @@
-"""API package for Product Hunt integration."""
+"""API package for Product Hunt data."""
 
 from .product_hunt_api import (
-    ph_api,
     get_categories,
     get_products,
     FALLBACK_CATEGORIES,

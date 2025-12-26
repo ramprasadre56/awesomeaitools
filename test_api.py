@@ -1,17 +1,17 @@
-"""Test Product Hunt API"""
+"""Test Product Hunt Data"""
 
-from awesomeaitools.api.product_hunt_api import ph_api
+from awesomeaitools.api.product_hunt_api import get_categories, get_products
 
-# Test topics
-print("Fetching topics...")
-topics = ph_api.get_topics()
-print(f"Found {len(topics)} topics")
-for t in topics[:5]:
-    print(f"  - {t.get('name')}: {t.get('postsCount')} posts")
+# Test categories
+print("Fetching categories...")
+categories = get_categories()
+print(f"Found {len(categories)} categories")
+for c in categories[:5]:
+    print(f"  - {c.get('name')}: {c.get('postsCount')} posts")
 
-# Test posts
-print("\nFetching posts...")
-posts = ph_api.get_posts(first=5)
-print(f"Found {len(posts)} posts")
-for p in posts[:5]:
+# Test products
+print("\nFetching products...")
+products = get_products(limit=5)
+print(f"Found {len(products)} products")
+for p in products[:5]:
     print(f"  - {p.get('name')}: {p.get('votesCount')} votes")
